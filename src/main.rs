@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::io::{stdout, BufRead, BufReader, BufWriter, Write};
 
 use anyhow::{Context, Ok, Result};
 use clap::Parser;
@@ -18,13 +18,17 @@ fn main() -> Result<()> {
     let file = File::open(&args.path)
         .with_context(|| format!("Could not read file '{}'.", args.path.display()))?;
     let reader = BufReader::new(file);
+    let stdout = stdout();
+    let mut writer = BufWriter::new(stdout);
 
     for line in reader.lines() {
         let line = line?;
         if line.contains(&args.pattern) {
-            println!("{line}");
+            writeln!(writer, "{line}")?;
         }
     }
+
+    writer.flush().unwrap();
 
     Ok(())
 }
